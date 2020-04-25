@@ -8,10 +8,11 @@ import java.util.ArrayList;
 
 public class Config implements Serializable {
 
-    private final Gson gson = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
+    private final transient Gson gson = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
     private String token;
     private ArrayList<Long> ownerIds;
     private String prefix;
+    private long botLogChannelId;
     private String defaultActivity;
 
     public String getToken() {
@@ -32,6 +33,14 @@ public class Config implements Serializable {
 
     public void setPrefix(String prefix) {
         this.prefix = prefix;
+    }
+
+    public long getBotLogChannelId() {
+        return botLogChannelId;
+    }
+
+    public void setBotLogChannelId(long botLogChannelId) {
+        this.botLogChannelId = botLogChannelId;
     }
 
     public String getDefaultActivity() {

@@ -2,18 +2,25 @@ package com.azortis.mythicalrealmsbot;
 
 import ch.qos.logback.classic.Logger;
 import com.azortis.mythicalrealmsbot.command.CommandDispatcher;
+import com.azortis.mythicalrealmsbot.console.Console;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
+import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.slf4j.LoggerFactory;
 
+import java.awt.*;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
+import java.time.Instant;
+import java.util.Objects;
 
-public final class MythicalRealmsBot {
+public final class MythicalRealmsBot extends ListenerAdapter {
 
     private static final Logger logger = (Logger) LoggerFactory.getLogger(MythicalRealmsBot.class);
     private static final Gson gson = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
@@ -21,15 +28,17 @@ public final class MythicalRealmsBot {
     private static String directory;
     private static Config config;
     private static File configFile;
+    private static Console console;
 
     public static void main(String[] args) throws Exception {
         directory = new File(MythicalRealmsBot.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParent();
         directory = directory.replace("%20", " ");
         loadConfig();
         configSetup();
+        console = new Console();
         client = JDABuilder.createDefault(config.getToken()).build();
-        client.addEventListener(new CommandDispatcher());
-        if(!config.getDefaultActivity().equals("none"))client.getPresence().setActivity(Activity.of(Activity.ActivityType.CUSTOM_STATUS, config.getDefaultActivity()));
+        client.addEventListener(new CommandDispatcher(), new ReadyListener());
+        if(!config.getDefaultActivity().equals("none"))client.getPresence().setActivity(Activity.watching(config.getDefaultActivity()));
         client.awaitReady();
     }
 
@@ -68,7 +77,13 @@ public final class MythicalRealmsBot {
         if(config.getPrefix().equals("")){
             logger.info("No prefix is present in the configuration, insert bot prefix");
             String prefix = System.console().readLine();
-            config.setToken(prefix);
+            config.setPrefix(prefix);
+            changesMade = true;
+        }
+        if(config.getBotLogChannelId() == 0){
+            logger.info("No botLogChannelId is present in the configuration, insert botLogChannelId");
+            String botLogChannelId = System.console().readLine();
+            config.setBotLogChannelId(Long.parseLong(botLogChannelId));
             changesMade = true;
         }
         if(config.getDefaultActivity().equals("")){
@@ -131,6 +146,19 @@ public final class MythicalRealmsBot {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public static void shutdown(){
+        MessageEmbed botShutdownEmbed = new EmbedBuilder()
+                .setTitle("Bot shutting down...")
+                .setColor(Color.decode("#FF5555"))
+                .setThumbnail(client.getSelfUser().getAvatarUrl())
+                .setFooter("© Azortis - MythicalRealms")
+                .setTimestamp(Instant.now()).build();
+        Objects.requireNonNull(client.getTextChannelById(config.getBotLogChannelId())).sendMessage(botShutdownEmbed).queue();
+        logger.info("Shutting down...");
+        console.inputThread.terminate();
+        client.shutdown();
     }
 
 }
