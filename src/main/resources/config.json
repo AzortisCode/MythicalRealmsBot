@@ -1,3 +1,6 @@
 {
-  "token": ""
+  "token": "",
+  "ownerIds": [],
+  "prefix": "",
+  "defaultActivity": ""
 }

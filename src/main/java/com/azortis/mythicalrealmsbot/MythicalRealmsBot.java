@@ -1,10 +1,12 @@
 package com.azortis.mythicalrealmsbot;
 
 import ch.qos.logback.classic.Logger;
+import com.azortis.mythicalrealmsbot.command.CommandDispatcher;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
+import net.dv8tion.jda.api.entities.Activity;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
@@ -24,8 +26,10 @@ public final class MythicalRealmsBot {
         directory = new File(MythicalRealmsBot.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParent();
         directory = directory.replace("%20", " ");
         loadConfig();
-        if(config.getToken().equals(""))fetchToken();
+        configSetup();
         client = JDABuilder.createDefault(config.getToken()).build();
+        client.addEventListener(new CommandDispatcher());
+        if(!config.getDefaultActivity().equals("none"))client.getPresence().setActivity(Activity.of(Activity.ActivityType.CUSTOM_STATUS, config.getDefaultActivity()));
         client.awaitReady();
     }
 
@@ -39,11 +43,41 @@ public final class MythicalRealmsBot {
         }
     }
 
-    private static void fetchToken(){
-        logger.info("No token is present in the configuration, insert bot token:");
-        String token = System.console().readLine();
-        config.setToken(token);
-        saveConfig();
+    private static void configSetup(){
+        boolean changesMade = false;
+        if(config.getToken().equals("")) {
+            logger.info("No token is present in the configuration, insert bot token");
+            String token = System.console().readLine();
+            config.setToken(token);
+            changesMade = true;
+        }
+        if(config.getOwnerIds().isEmpty()){
+            logger.info("No ownerIds present in the configuration, insert ownerIds, when you're done execute stop");
+            boolean stopped = false;
+            while(!stopped){
+                String input = System.console().readLine();
+                if(!input.equals("stop")) {
+                    config.getOwnerIds().add(Long.valueOf(input));
+                    logger.info("Added ownerId: " + input);
+                }else{
+                    stopped = true;
+                }
+            }
+            changesMade = true;
+        }
+        if(config.getPrefix().equals("")){
+            logger.info("No prefix is present in the configuration, insert bot prefix");
+            String prefix = System.console().readLine();
+            config.setToken(prefix);
+            changesMade = true;
+        }
+        if(config.getDefaultActivity().equals("")){
+            logger.info("No defaultActivity present in the configuration, insert default activity, for nothing insert: none");
+            String defaultActivity = System.console().readLine();
+            config.setDefaultActivity(defaultActivity);
+            changesMade = true;
+        }
+        if(changesMade)saveConfig();
     }
 
     private static void copy(InputStream in, File file) {
