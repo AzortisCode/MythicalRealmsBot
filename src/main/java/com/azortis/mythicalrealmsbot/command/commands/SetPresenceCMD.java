@@ -62,7 +62,7 @@ public class SetPresenceCMD implements Command {
     }
 
     @Override
-    public boolean dispatch(MessageReceivedEvent event, String[] arguments, boolean isGuild) {
+    public boolean dispatch(MessageReceivedEvent event, String[] arguments) {
         if(validArguments.get(1).contains(arguments[0]) && validArguments.get(2).contains(arguments[1])){
             if(arguments[2].equals("none") || Activity.isValidStreamingUrl(arguments[2])){
                 OnlineStatus onlineStatus = OnlineStatus.fromKey(arguments[0]);
@@ -102,10 +102,10 @@ public class SetPresenceCMD implements Command {
                         .setThumbnail(event.getJDA().getSelfUser().getAvatarUrl())
                         .setFooter("Executed by: " + event.getAuthor().getName() + "#" + event.getAuthor().getDiscriminator(), event.getAuthor().getAvatarUrl())
                         .setTimestamp(Instant.now()).build();
-                if(isGuild){
-                    event.getPrivateChannel().sendMessage(presenceChangedEmbed).queue();
-                }else {
+                if(event.isFromGuild()){
                     event.getTextChannel().sendMessage(presenceChangedEmbed).queue();
+                }else {
+                    event.getPrivateChannel().sendMessage(presenceChangedEmbed).queue();
                 }
                 return true;
             }

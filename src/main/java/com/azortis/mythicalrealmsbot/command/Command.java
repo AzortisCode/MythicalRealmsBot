@@ -14,6 +14,6 @@ public interface Command {
 
     CommandCategory getCategory();
 
-    boolean dispatch(MessageReceivedEvent event, String[] arguments, boolean isGuild);
+    boolean dispatch(MessageReceivedEvent event, String[] arguments);
 
 }

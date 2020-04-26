@@ -53,7 +53,7 @@ public class CommandDispatcher extends ListenerAdapter {
                 return;
             }
             String[] arguments = event.getMessage().getContentRaw().replaceFirst(commandString, "").trim().split(" ");
-            if(!command.dispatch(event, arguments, event.isFromGuild())){
+            if(!command.dispatch(event, arguments)){
                 MessageEmbed invalidUsageEmbed = new EmbedBuilder()
                         .setTitle("Invalid usage!")
                         .setColor(Color.decode("#FF5555"))
